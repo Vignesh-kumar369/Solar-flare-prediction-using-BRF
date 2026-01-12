@@ -10,7 +10,7 @@ This repository contains the machine learning pipeline used to predict solar fla
 * **Performance:** Achieved a True Skill Statistic (TSS) of ~0.60.
 
 ## Files
-* `Solar_Flare_Prediction_Pipeline.ipynb`: The main notebook containing the training logic, validation, and TSS calculation.
+* `04_Retraining_and_Error_Analysis`: The main notebook containing the training logic, validation, and TSS calculation.
 
 ## Requirements
 * Python 3.x
