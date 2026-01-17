@@ -1,5 +1,9 @@
 # Scalable ML Pipeline for Solar Flare Prediction (SDO/HMI) and GOES X-Ray  
 ### 🚀 Project Abstract
+![Priority Inversion Graph showing recovered flares] - <img width="3000" height="1500" alt="priority_inversion_graph" src="https://github.com/user-attachments/assets/4d81eca2-f3de-4ec0-b945-1062cc116e91" />
+### 🚨 Critical Discovery: Priority Inversion Bug
+> Fixed a labeling logic error that recovered **7,300+ mislabeled solar flares**.
+
 An end-to-end **Machine Learning Pipeline** designed to handle high-dimensional time-series data from the Solar Dynamics Observatory (SDO).
 
 This project focuses on **Data Engineering challenges** in Astrophysics: handling extreme class imbalance (1:80), optimizing I/O for terabyte-scale telemetry, and algorithmically correcting ground-truth label noise.
