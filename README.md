@@ -1,7 +1,4 @@
-# Solar Flare Prediction using Machine Learning
-
-# Scalable ML Pipeline for Solar Flare Prediction (SDO/HMI)
-
+# Scalable ML Pipeline for Solar Flare Prediction (SDO/HMI) and GOES X-Ray  
 ### 🚀 Project Abstract
 An end-to-end **Machine Learning Pipeline** designed to handle high-dimensional time-series data from the Solar Dynamics Observatory (SDO).
 
