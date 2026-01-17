@@ -40,7 +40,7 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 ### 📂 Tech Stack
 * **Core:** Python 3.x, Scikit-Learn (Random Forest, SMOTE).
 * **Data:** Pandas, NumPy, PyArrow (Parquet), SunPy.
-* **Viz:** Matplotlib, Seaborn.
+* **Visulisation:** Matplotlib, Seaborn.
 
 ### 📝 Key Notebooks
 * `04_Retraining_and_Error_Analysis.ipynb`: Full training loop, feature ranking, and TSS evaluation.
