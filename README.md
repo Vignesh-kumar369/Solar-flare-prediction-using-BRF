@@ -17,7 +17,7 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 * **Storage Optimization:** Migrated data architecture from CSV to **Apache Parquet**.
     * **Result:** Solved floating-point precision loss and reduced I/O read/write latency by **40%** during training.
 
-#### 2. algorithmic Correction of Label Noise ("Priority Inversion")
+#### 2. Algorithmic Correction of Label Noise ("Priority Inversion")
 * **The Bug:** Identified a race condition in the labeling logic where minor events (B-class) were overwriting major events (X-class) due to timestamp overlaps.
 * **The Fix:** Wrote a custom sorting algorithm to enforce strict class priority.
 * **Impact:** Recovered **7,300+ False Negatives**, cleaning the dataset for robust supervised learning.
@@ -25,8 +25,8 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 #### 3. Dimensionality Reduction (The "Elbow" Method)
 * **Problem:** The raw SDO dataset contained **240 features**, causing the "Curse of Dimensionality" and model overfitting.
 * **Solution:** Applied **Recursive Feature Elimination (RFE)** based on Gini Importance.
-* **Optimization:** Mathematically reduced feature space to **55 vectors** while retaining 90% of the predictive signal, drastically reducing training compute time.
-* ![Operational Tradeoff Curve](operational_tradeoff_curve.png)
+* **Optimization:** Mathematically reduced feature space to **55 vectors** while retaining more than 90% of the predictive signal, drastically reducing training compute time.
+
 
 ---
 
@@ -36,12 +36,18 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 * **Physics Validation:** The feature selection process independently validated physical theory by identifying **Total Unsigned Flux (USFLUX)** and **Magnetic Free Energy** as top predictors, proving the model is learning physical laws, not just statistical noise.
 * **Metric:** Optimized for **True Skill Statistic (TSS)** to account for the extreme rarity of solar flare events (vs. standard Accuracy).
 
+### 📊 Results
+* **TSS Score: 0.6870** (Cross-validated, clean dataset)
+* Recall: 0.9360
+
+* ![Operational Tradeoff Curve](operational_tradeoff_curve.png)
+
 ---
 
 ### 📂 Tech Stack
 * **Core:** Python 3.x, Scikit-Learn (Random Forest, SMOTE).
 * **Data:** Pandas, NumPy, PyArrow (Parquet), SunPy.
-* **Visulisation:** Matplotlib, Seaborn.
+* **Visualisation** Matplotlib, Seaborn.
 
 ### 📝 Key Notebooks
 * `04_Retraining_and_Error_Analysis.ipynb`: Full training loop, feature ranking, and TSS evaluation.
