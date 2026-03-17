@@ -26,6 +26,7 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 * **Problem:** The raw SDO dataset contained **240 features**, causing the "Curse of Dimensionality" and model overfitting.
 * **Solution:** Applied **Recursive Feature Elimination (RFE)** based on Gini Importance.
 * **Optimization:** Mathematically reduced feature space to **55 vectors** while retaining 90% of the predictive signal, drastically reducing training compute time.
+* ![Operational Tradeoff Curve](operational_tradeoff_curve.png) - <img width="3000" height="1500" alt="priority_inversion_graph" src="https://github.com/user-attachments/assets/4d81eca2-f3de-4ec0-b945-1062cc116e91" />
 
 ---
 
