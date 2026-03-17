@@ -40,14 +40,14 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 * **TSS Score: 0.6870** (Cross-validated, clean dataset)
 * Recall: 0.9360
 
-* ![Operational Tradeoff Curve](operational_tradeoff_curve.png)
+![Operational Tradeoff Curve](operational_tradeoff_curve.png)
 
 ---
 
 ### 📂 Tech Stack
 * **Core:** Python 3.x, Scikit-Learn (Random Forest, SMOTE).
 * **Data:** Pandas, NumPy, PyArrow (Parquet), SunPy.
-* **Visualisation** Matplotlib, Seaborn.
+* **Visualisation:** Matplotlib, Seaborn.
 
 ### 📝 Key Notebooks
 * `04_Retraining_and_Error_Analysis.ipynb`: Full training loop, feature ranking, and TSS evaluation.
