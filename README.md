@@ -25,7 +25,7 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 #### 3. Dimensionality Reduction (The "Elbow" Method)
 * **Problem:** The raw SDO dataset contained **240 features**, causing the "Curse of Dimensionality" and model overfitting.
 * **Solution:** Applied **Recursive Feature Elimination (RFE)** based on Gini Importance.
-* **Optimization:** Mathematically reduced feature space to **57 vectors** while retaining 90% of the predictive signal, drastically reducing training compute time.
+* **Optimization:** Mathematically reduced feature space to **55 vectors** while retaining 90% of the predictive signal, drastically reducing training compute time.
 
 ---
 
@@ -44,4 +44,4 @@ This project focuses on **Data Engineering challenges** in Astrophysics: handlin
 
 ### 📝 Key Notebooks
 * `04_Retraining_and_Error_Analysis.ipynb`: Full training loop, feature ranking, and TSS evaluation.
-* `ETL_Pipeline.py`: Data fetching and Parquet serialization logic.
+* `01_Data_Extraction`: Data fetching and Parquet serialization logic.
