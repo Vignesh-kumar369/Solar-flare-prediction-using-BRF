@@ -120,7 +120,7 @@ A one-feature rule already reaches about 70% of the models' TSS, so much of the 
 ### ⚠️ Limitations
 
 * **Small test set:** only 8 flare-producing regions, so small differences between models are not meaningful.
-* **Random-in-time split:** train and test both span 2014 to 2015, so the evaluation tests interpolation within the observed window, not extrapolation to unseen solar-cycle conditions. A train-2014/test-2015 split is not yet run. Its result would mix model error with year-to-year solar-cycle drift (flare rate and positive counts differ between years), so it should be read as a stress test, not a pure leakage measure.* **Baseline threshold:** the USFLUX baseline uses the training median, not a tuned threshold.
+* **Random-in-time split**: train and test both span 2014 to 2015, so the evaluation tests interpolation within the observed window, not extrapolation to unseen solar-cycle conditions. A train-2014/test-2015 split is not yet run. When it is, treat it as a stress test rather than a clean measure of how much the random split inflated these scores: the active-region population and its magnetic statistics shift with solar-cycle phase between the two years, so any TSS change would mix genuine leakage inflation with the model's response to that covariate shift. (TSS itself is prevalence-insensitive, so raw year-to-year flare-count differences are not the confound; the feature-distribution shift is.)
 * **Observation gaps:** I measured how many records are affected but did not retrain to see the effect on results.
 * **False alarms:** precision is below 9%. I did not try training the model to punish missed flares more than false alarms.
 
