@@ -1,54 +1,130 @@
-# Scalable ML Pipeline for Solar Flare Prediction (SDO/HMI) and GOES X-Ray  
+# Scalable ML Pipeline for Solar Flare Prediction (SDO/HMI) and GOES X-Ray
+
 ### 🚀 Project Abstract
-![Priority Inversion Graph showing recovered flares] - <img width="3000" height="1500" alt="priority_inversion_graph" src="https://github.com/user-attachments/assets/4d81eca2-f3de-4ec0-b945-1062cc116e91" />
-### 🚨 Critical Discovery: Priority Inversion Bug
-> Fixed a labeling logic error that recovered **7,300+ mislabeled solar flares**.
 
-An end-to-end **Machine Learning Pipeline** designed to handle high-dimensional time-series data from the Solar Dynamics Observatory (SDO).
+<img width="3000" height="1500" alt="priority_inversion_graph" src="https://github.com/user-attachments/assets/4d81eca2-f3de-4ec0-b945-1062cc116e91" />
 
-This project focuses on **Data Engineering challenges** in Astrophysics: handling extreme class imbalance (1:80), optimizing I/O for terabyte-scale telemetry, and algorithmically correcting ground-truth label noise.
+Binary classification of M/X-class GOES flares within 24 hours of an SDO/HMI SHARP vector-magnetogram record, using 2014 to 2015 data (Solar Cycle 24 maximum). Models: XGBoost and Balanced Random Forest (BRF) on tabular SHARP parameters, tuned with Optuna and evaluated with TSS.
+
+**Status:** manuscript in preparation. This repo holds the code and results as of October 2026.
+
+This project does **not** claim to forecast flares 24 hours ahead. Its claims are:
+
+1. Window-based flare labeling can hide an overwrite artifact ("priority inversion") that removes most of the positive class. Fixing it changed the M+X positives from 1,143 to 8,365.
+2. TSS on this task is largely explained by recognizing flare-productive and repeat-flaring active regions, not by detecting temporal precursors.
+3. Leakage-aware evaluation exposes both effects. A plain random split inflated test TSS to 0.9175.
 
 ---
 
-### 🛠️ Data Engineering & Architecture
+### 🚨 Key Finding: Priority Inversion Bug
 
-#### 1. High-Performance ETL Pipeline
-* **Parallel Processing:** Implemented multi-threaded downloading to handle massive throughput of SDO/HMI vector magnetograms.
-* **Storage Optimization:** Migrated data architecture from CSV to **Apache Parquet**.
-    * **Result:** Solved floating-point precision loss and reduced I/O read/write latency by **40%** during training.
+> Fixing a label-overwrite bug in the labeling loop recovered **7,222 mislabeled positive samples** (1,143 to 8,365).
 
-#### 2. Algorithmic Correction of Label Noise ("Priority Inversion")
-* **The Bug:** Identified a race condition in the labeling logic where minor events (B-class) were overwriting major events (X-class) due to timestamp overlaps.
-* **The Fix:** Wrote a custom sorting algorithm to enforce strict class priority.
-* **Impact:** Recovered **7,300+ False Negatives**, cleaning the dataset for robust supervised learning.
+A record is positive if an M or X flare from the same `NOAA_AR` starts in `[T_REC, T_REC + 24 h)`. The original loop assigned classes in the order X, M, C, B and overwrote earlier labels, so a later weak flare erased an earlier strong flare's label inside overlapping windows.
 
-#### 3. Dimensionality Reduction (The "Elbow" Method)
-* **Problem:** The raw SDO dataset contained **240 features**, causing the "Curse of Dimensionality" and model overfitting.
-* **Solution:** Applied **Recursive Feature Elimination (RFE)** based on Gini Importance.
-* **Optimization:** Mathematically reduced feature space to **55 vectors** while retaining more than 90% of the predictive signal, drastically reducing training compute time.
+Controlled ablation (only the loop order changed):
 
+| Class | Descending (buggy) | Ascending (fixed) | Delta |
+|---|---|---|---|
+| X | 16 | 1,096 | +1,080 |
+| M | 1,127 | 7,269 | +6,142 |
+| C | 37,117 | 32,060 | -5,057 |
+| B | 4,824 | 2,659 | -2,165 |
+| Non-flare | 638,374 | 638,374 | 0 |
+| **Positive (M+X)** | **1,143** | **8,365** | **+7,222** |
+
+The counts balance exactly (1,080 + 6,142 = 5,057 + 2,165), and the unchanged non-flare count shows the matching logic was held constant. A max-rank version (`np.maximum` over class ranks) makes the bug structurally impossible. The corrected positive class is about 1 in 80 records.
+
+---
+
+### 🛠️ Data and Pipeline
+
+| Item | Value |
+|---|---|
+| Raw SHARP records (2014 to 2015) | 918,328 |
+| Raw GOES flare records | 2,299 |
+| Records after parsing and cleaning | 681,458 |
+| Model-ready rows (after features and NaN drop) | 578,993 |
+
+* **Data extraction:** SHARP parameters and flare records fetched with SunPy and serialized to Apache Parquet (notebook `01`).
+* **Cleaning:** parsed `T_REC` (TAI), sorted by (HARPNUM, T_REC), de-duplicated. No duplicates found. The 35 s TAI to UTC offset was tested and has a negligible effect on labels.
+* **Cadence gaps:** 5,055 records (0.87%) follow a gap longer than 24 minutes (57 positive). Deltas use fixed index offsets, so derivatives spanning a gap are mis-scaled. The upper bound on affected records is about 38.6k (6 h deltas) and 77.2k (12 h deltas). A sensitivity test has not been run yet.
+
+**Features:** 16 base SHARP parameters, 2 physics ratios (`TOTUSJH/USFLUX`, `TOTUSJZ/USFLUX`), 6 h and 12 h index-based deltas, and rolling statistics, from a larger candidate set. Removing the rolling statistics raised test TSS from 0.6583 to 0.6870 and cut the train-test gap from 0.1810 to 0.1410. All final models use the **55-feature** set. Known defects: the 1e-9 epsilon creates outliers when `USFLUX` is near zero, and index-based deltas assume a perfect 720 s cadence.
+
+**Splitting:** `GroupShuffleSplit` on HARPNUM, test size 0.10, seed 35. Train: 517,418 rows (6,486 positives). Test: 61,575 rows (1,468 positives) from 8 flare-producing active regions (11947, 11968, 11996, 12055, 12113, 12209, 12222, 12241). Seed 35 was chosen by scanning seeds 0 to 99 for test-set region diversity, which is a selection on test composition. The split is random in time, not chronological.
+
+**Tuning:** Optuna (TPE, 50 trials), 5-fold GroupKFold, TSS objective with an in-fold threshold scan, so the CV score is optimistic. Different sampler seeds gave different best parameters (CV TSS 0.7729 vs 0.7430). Isotonic calibration failed (zero recall), so models are uncalibrated.
 
 ---
 
 ### ⚛️ Domain Context
 
-* **Target:** Prediction of **M- and X-class Solar Flares** (Space Weather events).
-* **Physics Validation:** The feature selection process independently validated physical theory by identifying **Total Unsigned Flux (USFLUX)** and **Magnetic Free Energy** as top predictors, proving the model is learning physical laws, not just statistical noise.
-* **Metric:** Optimized for **True Skill Statistic (TSS)** to account for the extreme rarity of solar flare events (vs. standard Accuracy).
+* **Target:** M- and X-class solar flares (space weather events).
+* **Metric:** True Skill Statistic (TSS = recall + specificity - 1), chosen because accuracy is meaningless at 1:80 imbalance.
+* **Interpretation caution:** the model is not shown to learn flare physics. Section "Diagnostics" shows its skill is concentrated in already-flaring, magnetically extreme regions.
+
+---
 
 ### 📊 Results
-* **TSS Score: 0.6870** (Cross-validated, clean dataset)
-* Recall: 0.9360
+
+Leak-free protocol: thresholds chosen from out-of-fold predictions on the training set only, test set evaluated once.
+
+| Model | Threshold | TSS | Recall | Precision | FP | FN |
+|---|---|---|---|---|---|---|
+| XGBoost | 0.47 | 0.6450 | 0.8638 | 0.0880 | 13,148 | 200 |
+| Balanced Random Forest | 0.32 | 0.6499 | 0.9666 | 0.0694 | 19,040 | 49 |
+
+* The TSS difference (0.0049) is well within noise on an 8-region test set. Neither model is shown to be better.
+* XGBoost gives 30.9% fewer false positives and 10.3 points less recall than BRF.
+* Precision of 6.9 to 8.8% means about 10 to 14 false alarms per hit, so these models are not operationally usable.
+* An earlier phase scanned thresholds on the test set (XGBoost 0.7163, BRF 0.6814). Those figures are optimistic and kept only for transparency.
 
 ![Operational Tradeoff Curve](operational_tradeoff_curve.png)
 
 ---
 
+### 🔬 Diagnostics
+
+**Lead-time stratification** (threshold 0.55 from the earlier test-set scan, to be recomputed at 0.47; global FPR 0.2183):
+
+| Lead time | n | Recall | TSS | Already flared |
+|---|---|---|---|---|
+| 0 to 6 h | 480 | 0.9708 | 0.7526 | 73.3% |
+| 6 to 12 h | 432 | 0.8773 | 0.6590 | 71.8% |
+| 12 to 18 h | 289 | 0.8997 | 0.6814 | 70.6% |
+| 18 to 24 h | 266 | 1.0000 | 0.7817 | 74.8% |
+
+* Skill does not decay with lead time. Perfect recall at 18 to 24 h is not what precursor detection would produce.
+* 1,066 of 1,468 test positives (72.6%) come from regions that had already produced an M/X flare.
+* On first-flare-only records (n = 402), recall across the four bins is 0.8906 / 0.5656 / 0.6588 / 1.0000. Mid-horizon recall drops once repeat flarers are removed.
+* Each bin contains only 6 to 8 unique active regions, so per-bin statistics are region-clustered.
+* One test region (HARPNUM 3587, 49 positives) gets zero true positives.
+
+Working interpretation: the models behave like classifiers of flare-productive regions. A static region-level baseline would test this directly and has not been run.
+
+---
+
+### ⚠️ Limitations and Pending Work
+
+* Chronological split (train 2014, test 2015): not yet run.
+* Static baseline (for example a `USFLUX` threshold or "region already flared"): not yet run.
+* Gap-masking sensitivity test: specified, not yet reported.
+* Lead-time table at the leak-free threshold, and unique regions in the first-flare 18 to 24 h bin: pending.
+* Test set is 8 regions. No cost-sensitive or focal loss attempted.
+
+---
+
 ### 📂 Tech Stack
-* **Core:** Python 3.x, Scikit-Learn (Random Forest, SMOTE).
+
+* **Core:** Python 3.x, scikit-learn, imbalanced-learn (BRF), XGBoost, Optuna, Numba.
 * **Data:** Pandas, NumPy, PyArrow (Parquet), SunPy.
-* **Visualisation:** Matplotlib, Seaborn.
+* **Visualisation:** Matplotlib.
 
 ### 📝 Key Notebooks
-* `04_Retraining_and_Error_Analysis.ipynb`: Full training loop, feature ranking, and TSS evaluation.
-* `01_Data_Extraction`: Data fetching and Parquet serialization logic.
+
+* `01_Data_Extraction.ipynb`: data fetching and Parquet serialization.
+* `02_Data_Cleaning.ipynb`: parsing, de-duplication, labeling.
+* `03_Model_Training.ipynb`: features, Optuna tuning, training.
+* `04_Retraining_and_Error_Analysis.ipynb`: retraining on corrected labels, TSS evaluation, diagnostics.
+* `Consolidated Results from the Project.ipynb`: results summary.
