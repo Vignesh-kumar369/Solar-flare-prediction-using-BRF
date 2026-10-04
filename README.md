@@ -105,13 +105,15 @@ Working interpretation: the models behave like classifiers of flare-productive r
 
 ---
 
-### ⚠️ Limitations and Pending Work
+### ⚠️ Limitations
 
-* Chronological split (train 2014, test 2015): not yet run.
-* Static baseline (for example a `USFLUX` threshold or "region already flared"): not yet run.
-* Gap-masking sensitivity test: specified, not yet reported.
-* Lead-time table at the leak-free threshold, and unique regions in the first-flare 18 to 24 h bin: pending.
-* Test set is 8 regions. No cost-sensitive or focal loss attempted.
+* **Small test set:** the held-out split contains only 8 flare-producing active regions, so model comparisons are not statistically resolved. The seed (35) was chosen from seeds 0 to 99 by maximizing the number of flaring test regions (8, tied with seed 92), a criterion independent of model performance.
+* **Random-in-time split:** train and test both span 2014 to 2015. A chronological train-2014/test-2015 split is not yet run.
+* **Untested interpretation:** a static region-level baseline (for example a `USFLUX` threshold or "region has already flared") is not yet run, so the region-productivity interpretation remains a hypothesis.
+* **Uncertainty on the model comparison:** no region-level bootstrap on the out-of-fold predictions has been done. Hyperparameters were tuned on those same folds, so out-of-fold scores are somewhat optimistic.
+* **Cadence gaps:** the sensitivity test for gap-affected deltas is specified but not reported.
+* **Lead-time table:** computed at threshold 0.55 (from the earlier test-set scan), not the leak-free 0.47.
+* **Precision** is below 9%, and no cost-sensitive loss was tried.
 
 ---
 
