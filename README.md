@@ -99,7 +99,7 @@ A one-feature rule already reaches about 70% of the models' TSS, so much of the 
 
 ### 🔬 Diagnostics
 
-**Recall by hours before the flare** (threshold 0.55 from the earlier scan; global FPR 0.2183):
+**Recall by hours before the flare**:
 
 | Lead time | n | Recall | TSS | Already flared |
 |---|---|---|---|---|
@@ -120,8 +120,7 @@ A one-feature rule already reaches about 70% of the models' TSS, so much of the 
 ### ⚠️ Limitations
 
 * **Small test set:** only 8 flare-producing regions, so small differences between models are not meaningful.
-* **Split in time:** train and test both span 2014 to 2015. A train-2014/test-2015 split is future work.
-* **Baseline threshold:** the USFLUX baseline uses the training median, not a tuned threshold.
+* **Random-in-time split:** train and test both span 2014 to 2015, so the evaluation tests interpolation within the observed window, not extrapolation to unseen solar-cycle conditions. A train-2014/test-2015 split is not yet run. Its result would mix model error with year-to-year solar-cycle drift (flare rate and positive counts differ between years), so it should be read as a stress test, not a pure leakage measure.* **Baseline threshold:** the USFLUX baseline uses the training median, not a tuned threshold.
 * **Observation gaps:** I measured how many records are affected but did not retrain to see the effect on results.
 * **False alarms:** precision is below 9%. I did not try training the model to punish missed flares more than false alarms.
 
