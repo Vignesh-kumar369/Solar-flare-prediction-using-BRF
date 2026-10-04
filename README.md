@@ -80,7 +80,7 @@ Leak-free protocol: thresholds chosen from out-of-fold predictions on the traini
 * Precision of 6.9 to 8.8% means about 10 to 14 false alarms per hit, so these models are not operationally usable.
 * An earlier phase scanned thresholds on the test set (XGBoost 0.7163, BRF 0.6814). Those figures are optimistic and kept only for transparency.
 
-![Operational Tradeoff Curve](operational_tradeoff_curve.png)
+<!-- ![Operational Tradeoff Curve](operational_tradeoff_curve.png) -->
 
 ---
 
